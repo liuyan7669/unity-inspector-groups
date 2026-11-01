@@ -38,7 +38,19 @@ https://github.com/liuyan7669/unity-inspector-groups.git#1.0.0
 
 开发期间可使用 `https://github.com/liuyan7669/unity-inspector-groups.git#main`。
 
-本仓库为私人仓库，安装前需在本机配置有权限的 GitHub 账号。包尚未发布到 OpenUPM。
+本仓库已公开，可以通过 Git URL 安装。
+
+### 通过 OpenUPM 安装
+
+OpenUPM 收录申请正在提交；在注册表确认版本可用前，请使用上面的 Git URL。收录完成后，在 Unity 的 **Edit > Project Settings > Package Manager** 添加 Scoped Registry：
+
+```text
+Name: package.openupm.com
+URL: https://package.openupm.com
+Scope: com.cowart.inspector-groups
+```
+
+然后通过 **Add package by name** 安装 `com.cowart.inspector-groups`。
 
 ## 目录结构
 
