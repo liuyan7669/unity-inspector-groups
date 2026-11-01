@@ -1,0 +1,7 @@
+{
+  "name": "Cowart.InspectorGroups.Samples",
+  "rootNamespace": "Cowart.InspectorGroups.Samples",
+  "references": [
+    "Cowart.InspectorGroups"
+  ]
+}

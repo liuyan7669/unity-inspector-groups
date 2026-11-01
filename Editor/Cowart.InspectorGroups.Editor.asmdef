@@ -1,0 +1,10 @@
+{
+  "name": "Cowart.InspectorGroups.Editor",
+  "rootNamespace": "Cowart.InspectorGroups.Editor",
+  "references": [
+    "Cowart.InspectorGroups"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "com.cowart.inspector-groups",
+  "version": "1.0.0",
+  "displayName": "Inspector Groups",
+  "description": "提供 Inspector 折叠分组、只读、条件显示与启用、必填提示、方法按钮、内联编辑、资源预览、下拉选项、进度条和文本展示。",
+  "unity": "2021.3",
+  "author": {
+    "name": "Cowart"
+  },
+  "license": "MIT",
+  "keywords": [
+    "inspector",
+    "attributes",
+    "editor",
+    "foldout",
+    "groups"
+  ],
+  "samples": [
+    {
+      "displayName": "Inspector Demo",
+      "description": "通过 Tests 演示全部 11 个特性、组合用法、嵌套对象与内联 ScriptableObject。",
+      "path": "Samples~/Inspector Demo"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liuyan7669/unity-inspector-groups.git"
+  }
+}
