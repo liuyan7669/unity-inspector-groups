@@ -42,7 +42,7 @@ https://github.com/liuyan7669/unity-inspector-groups.git#1.0.0
 
 ### 通过 OpenUPM 安装
 
-OpenUPM 收录申请正在提交；在注册表确认版本可用前，请使用上面的 Git URL。收录完成后，在 Unity 的 **Edit > Project Settings > Package Manager** 添加 Scoped Registry：
+本包已在 OpenUPM 发布 `1.0.0`：[查看包页面](https://openupm.com/packages/com.cowart.inspector-groups/)。在 Unity 的 **Edit > Project Settings > Package Manager** 添加 Scoped Registry：
 
 ```text
 Name: package.openupm.com
