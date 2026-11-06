@@ -1,6 +1,6 @@
 # Inspector Groups
 
-为 Unity Inspector 提供折叠分组、条件显示、字段选择器、资源预览、方法按钮及其他自定义特性。
+为 Unity Inspector 提供 24 个可组合特性，涵盖折叠分组、字段装饰、居中文字分隔线、条件显示、选择器、资源预览和方法按钮。
 
 支持在同一成员上组合不同特性，也支持在可序列化的类、结构体、数组、列表及内联 ScriptableObject 中继续使用特性。可以混用 Unity 的 Header、Space、Tooltip、Range、Min、TextArea 等特性。
 
@@ -8,7 +8,7 @@
 
 - Package Manager 显示名：`Inspector Groups`
 - 包名：`com.cowart.inspector-groups`
-- 当前版本：`1.1.0`
+- 当前版本：`1.2.0`
 - Runtime 程序集与命名空间：`Cowart.InspectorGroups`
 - Editor 程序集与命名空间：`Cowart.InspectorGroups.Editor`
 - 许可：MIT
@@ -33,7 +33,7 @@
 在 Package Manager 中选择 **+ > Add package from git URL...**，输入固定版本地址：
 
 ```text
-https://github.com/liuyan7669/unity-inspector-groups.git#1.1.0
+https://github.com/liuyan7669/unity-inspector-groups.git#1.2.0
 ```
 
 开发期间可使用 `https://github.com/liuyan7669/unity-inspector-groups.git#main`。
@@ -99,7 +99,7 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 
 ## 目录
 
-- [字段装饰](#字段装饰) · [Title](#title) · [Line](#line) · [InfoBox](#infobox) · [Label](#label) · [ColorField](#colorfield)
+- [字段装饰](#字段装饰) · [Title](#title) · [Line](#line) · [Divider](#divider) · [InfoBox](#infobox) · [Label](#label) · [ColorField](#colorfield)
 - [字段选择器](#字段选择器) · [MinMaxSlider](#minmaxslider) · [Tag](#tag) · [Layer](#layer) · [SceneName](#scenename) · [EnumFlags](#enumflags)
 - [HideIf](#hideif) · [EndFoldout](#endfoldout)
 - [从 InspectorAttributes 迁移](#从-inspectorattributes-迁移)
@@ -136,6 +136,23 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 ```csharp
 [Line("#29B6F6", 2f, LinePosition.Both)]
 [SerializeField] private int score;
+```
+
+### Divider
+
+在字段上方绘制一条带居中文字的分隔栏。左右线条等长，按文字的实际宽度自动伸缩。空间不足时线条会缩到零，超出可用宽度的文字会裁切。
+
+| 参数 | 默认值 | 作用 |
+| --- | --- | --- |
+| `text` | 必填 | 居中文字 |
+| `textColor` | `"#4FC3F7"` | 文字颜色 |
+| `lineColor` | `"#4FC3F7"` | 两侧线条颜色 |
+| `thickness` | `1f` | 线条粗细，单位为 GUI 点 |
+| `fontSize` | `12` | 文字字号 |
+
+```csharp
+[Divider("新消息", textColor: "#4FC3F7", lineColor: "#2676B9", thickness: 2f, fontSize: 14)]
+[SerializeField] private string message;
 ```
 
 ### InfoBox
@@ -260,7 +277,7 @@ private enum Element { None = 0, Fire = 1, Water = 2, Wind = 4 }
 | 内联对象 | InlineEditor 中继续使用相同的绘制规则，内部的分组、条件、按钮及其他特性仍生效。循环对象引用停止继续展开，并显示提示。 |
 | 方法和非序列化成员 | Button 方法、未序列化的 ShowAsString 字段/属性显示在当前对象的序列化字段之后，可独立分组，也可组合 ReadOnly、ShowIf、EnableIf。 |
 | 类型要求 | 组合不会改变类型契约。例如 ProgressBar 用于 int/float，InlineEditor 用于 ScriptableObject，不能把对象引用当成数值进度。类型或成员名错误会显示提示。 |
-| 同种特性重复 | Title、Line 和 InfoBox 允许在同一字段重复标记；不同对象层级可以各自声明。 |
+| 同种特性重复 | Title、Line、Divider 和 InfoBox 允许在同一字段重复标记；不同对象层级可以各自声明。 |
 
 以下写法等价：
 

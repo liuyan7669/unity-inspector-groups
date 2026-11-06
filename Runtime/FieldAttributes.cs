@@ -34,6 +34,29 @@ namespace Cowart.InspectorGroups
         }
     }
 
+    /// <summary>在居中文字两侧绘制自动伸缩的分割线。</summary>
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
+    public sealed class DividerAttribute : PropertyAttribute
+    {
+        public string Text { get; }
+        public Color TextColor { get; }
+        public Color LineColor { get; }
+        public float Thickness { get; }
+        public int FontSize { get; }
+
+        /// <summary>设置分隔文字、文字颜色、线条颜色、线宽和字号。</summary>
+        public DividerAttribute(string text, string textColor = "#4FC3F7", string lineColor = "#4FC3F7",
+            float thickness = 1f, int fontSize = 12)
+        {
+            Text = text ?? string.Empty;
+            TextColor = ColorParser.Parse(textColor, Color.white);
+            LineColor = ColorParser.Parse(lineColor, Color.gray);
+            Thickness = Mathf.Max(1f, thickness);
+            FontSize = Mathf.Max(1, fontSize);
+            order = -6;
+        }
+    }
+
     /// <summary>分割线位置：上方 / 下方 / 上下都有。</summary>
     public enum LinePosition { Above, Below, Both }
 

@@ -101,6 +101,7 @@ public class Tests : MonoBehaviour
     [FoldoutGroup("12 · 字段外观与选择器", spacing: 8f, color: "#4FC3F7", border: true)]
     [Title("字段外观")]
     [InfoBox("拖动彩色进度条或双端滑块，修改下方数值。")]
+    [Divider("新消息")]
     [Label("生命值"), ProgressBar(100f, "#E53935")]
     [SerializeField] private float health = 80f;
 
@@ -120,6 +121,7 @@ public class Tests : MonoBehaviour
     [SerializeField] private int mana = 30;
 
     [Title("项目选择器", "#AB47BC")]
+    [Divider("这里是一段更长的分隔文字", textColor: "#FFCA80", lineColor: "#4488CC", thickness: 2f, fontSize: 15)]
     [Tag]
     [SerializeField] private string targetTag = "Untagged";
 

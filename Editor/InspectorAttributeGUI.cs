@@ -175,7 +175,7 @@ namespace Cowart.InspectorGroups.Editor
             if (field == null) return false;
             foreach (PropertyAttribute attribute in field.GetCustomAttributes<PropertyAttribute>())
                 if (!(attribute is HeaderAttribute) && !(attribute is SpaceAttribute) && !(attribute is TooltipAttribute) &&
-                    !(attribute is TitleAttribute) && !(attribute is LineAttribute) && !(attribute is InfoBoxAttribute))
+                    !(attribute is TitleAttribute) && !(attribute is LineAttribute) && !(attribute is InfoBoxAttribute) && !(attribute is DividerAttribute))
                     return true;
             return false;
         }
@@ -196,6 +196,8 @@ namespace Cowart.InspectorGroups.Editor
                 if (attribute is SpaceAttribute space) EditorGUILayout.Space(space.height);
                 else if (attribute is TitleAttribute title)
                     TitleDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, TitleDecoratorDrawer.Height)), title);
+                else if (attribute is DividerAttribute divider)
+                    DividerDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, DividerDecoratorDrawer.Height(divider))), divider);
                 else if (attribute is InfoBoxAttribute info)
                     InfoBoxDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, InfoBoxDecoratorDrawer.Height(info))), info);
                 else if (attribute is LineAttribute line && line.Position != LinePosition.Below)
