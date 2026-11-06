@@ -99,6 +99,10 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 
 ## 目录
 
+- [字段装饰](#字段装饰) · [Title](#title) · [Line](#line) · [InfoBox](#infobox) · [Label](#label) · [ColorField](#colorfield)
+- [字段选择器](#字段选择器) · [MinMaxSlider](#minmaxslider) · [Tag](#tag) · [Layer](#layer) · [SceneName](#scenename) · [EnumFlags](#enumflags)
+- [HideIf](#hideif) · [EndFoldout](#endfoldout)
+- [从 InspectorAttributes 迁移](#从-inspectorattributes-迁移)
 - [组合与嵌套规则](#组合与嵌套规则)
 - [FoldoutGroup](#foldoutgroup)
 - [ReadOnly](#readonly)
@@ -114,14 +118,130 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 - [完整组合示例](#完整组合示例)
 - [自定义编辑器接入](#自定义编辑器接入)
 
-## 新增特性与迁移
+## 字段装饰
 
-- 装饰支持 `[Title("战斗")]`、`[InfoBox("提示")]` 和 `[Line(LinePosition.Both)]`。下方分割线由包内 Inspector 绘制。
-- 字段显示支持 `[Label("生命值")]` 和 `[ColorField("#FFD54F", true)]`。
-- 选择器支持 `[MinMaxSlider(0, 100)]`（Vector2 / Vector2Int）、`[Tag]`（string）、`[Layer]`（int / string）、`[SceneName]`（启用场景的名称或构建索引）和 `[EnumFlags]`（枚举）。
-- `ShowIf` 支持枚举等多个候选值，匹配任一值时显示。只给成员名时，布尔值按真假判断，引用按非空判断。`HideIf` 反转条件。
-- `[ProgressBar(100f, "#66BB6A")]` 允许点击和拖动修改。原有数值范围重载仍显示只读进度。
-- `[Button("刷新", height: 28)]` 可指定按钮高度。
+### Title
+
+在字段上方绘制彩色标题。`text` 为标题，`color` 默认为 `"#4FC3F7"`，`line` 默认为 `true`，控制标题下划线。
+
+```csharp
+[Title("战斗", "#EF5350", line: false)]
+[SerializeField] private int attack;
+```
+
+### Line
+
+在字段上方、下方或两侧绘制分割线。`color` 默认为 `"#808080"`，`thickness` 默认为 `1f`，`position` 默认为 `LinePosition.Above`。下方的分割线由包内 Inspector 绘制。
+
+```csharp
+[Line("#29B6F6", 2f, LinePosition.Both)]
+[SerializeField] private int score;
+```
+
+### InfoBox
+
+在字段上方显示提示文字。第二个参数可选 `None`、`Info`、`Warning` 或 `Error`，默认为 `Info`。
+
+```csharp
+[InfoBox("没有护盾时显示。", InfoBoxType.Warning)]
+[SerializeField] private float dodgeRate;
+```
+
+### Label
+
+修改序列化字段在包内 Inspector 中的显示名称。
+
+```csharp
+[Label("生命值")]
+[SerializeField] private float health;
+```
+
+### ColorField
+
+对字段控件背景着色。可传颜色字符串，也可传三个 0～1 的 RGB 分量。`tintText: true` 同时给文字着色，默认为 `false`。
+
+```csharp
+[ColorField("#FFD54F", tintText: true)]
+[SerializeField] private string characterName;
+
+[ColorField(1f, 0.5f, 0.5f)]
+[SerializeField] private int priority;
+```
+
+## 字段选择器
+
+### MinMaxSlider
+
+使用双端滑块编辑 `Vector2` 或 `Vector2Int`。构造参数是允许的最小值和最大值，字段的 `x` 和 `y` 分别保存区间下界和上界。
+
+```csharp
+[MinMaxSlider(0f, 100f)]
+[SerializeField] private Vector2 damageRange = new Vector2(10f, 30f);
+```
+
+### Tag
+
+为 `string` 字段显示项目 Tag 下拉菜单，保存选中的 Tag 名称。
+
+```csharp
+[Tag]
+[SerializeField] private string targetTag = "Untagged";
+```
+
+### Layer
+
+为 `int` 或 `string` 字段显示项目 Layer 下拉菜单，分别保存层索引或层名称。
+
+```csharp
+[Layer]
+[SerializeField] private int targetLayer;
+```
+
+### SceneName
+
+从 Build Settings 中已启用的场景选择。`string` 保存场景文件名（不含扩展名），`int` 保存已启用场景列表中的零基索引。
+
+```csharp
+[SceneName]
+[SerializeField] private string nextScene;
+```
+
+### EnumFlags
+
+为枚举字段显示多选掩码。用于可组合的枚举时，为各成员使用独立的位值并标记 `[Flags]`。
+
+```csharp
+[System.Flags]
+private enum Element { None = 0, Fire = 1, Water = 2, Wind = 4 }
+
+[EnumFlags]
+[SerializeField] private Element elements = Element.Fire | Element.Wind;
+```
+
+## HideIf
+
+条件成立时隐藏字段、文本成员或按钮。只给成员名时，布尔值按真假判断，引用按非空判断。传入候选值时，匹配任一值即隐藏。
+
+```csharp
+[SerializeField] private bool hasShield;
+
+[HideIf(nameof(hasShield))]
+[SerializeField] private float dodgeRate;
+```
+
+## EndFoldout
+
+在当前字段前结束所在层级的折叠组。当前字段和随后未开启新分组的字段会显示在组外。
+
+```csharp
+[FoldoutGroup("战斗", expanded: false, color: "#EF5350", border: true)]
+[SerializeField] private int attack;
+
+[EndFoldout]
+[SerializeField] private string note;
+```
+
+## 从 InspectorAttributes 迁移
 
 原 `InspectorAttributes` 示例的新增效果已并入 `Tests` 的「12 · 字段外观与选择器」分组。使用旧示例的写法时，将命名空间改为 `Cowart.InspectorGroups`，用 `AssetPreview` 替换 `Preview`。用 `FoldoutGroup` 开始连续分组，通过 `EndFoldout` 在当前字段前结束分组。原先依赖同名标记收集离散字段的写法，需要把字段放在同一连续区间，并在首字段标记一次。分组可通过 `color` 和 `border` 设置标题颜色和边线。
 
@@ -173,6 +293,8 @@ FoldoutGroupAttribute(string title, bool expanded = true, float spacing = 2f)
 | `title` | string | 必填 | 标题文字。 |
 | `expanded` | bool | true | 没有会话记录时是否展开。 |
 | `spacing` | float | 2f | 本组结束后到下一组的空隙，单位为 GUI 点。负数按 0 处理，最后一组不添加此空隙。 |
+| `color` | string | null | 标题文字颜色。 |
+| `border` | bool | false | 绘制标题栏边线。 |
 
 | 调用方式 | 效果 |
 | --- | --- |
@@ -239,6 +361,7 @@ ShowIfAttribute(string memberName, bool expected = true)
 | 调用方式 | 效果 |
 | --- | --- |
 | `[ShowIf(nameof(useConfig))]` | useConfig 为 true 时显示。 |
+| `[ShowIf(nameof(attackType), AttackType.Ranged, AttackType.Magic)]` | 远程或魔法类型时显示。 |
 | `[ShowIf(nameof(useConfig), false)]` | useConfig 为 false 时显示。 |
 | `[ShowIf(nameof(useConfig), expected: false)]` | 同上，显式命名。 |
 | `[ShowIf(memberName: nameof(useConfig), expected: true)]` | 全部命名。 |
@@ -325,6 +448,7 @@ ButtonAttribute(string label = null, bool playModeOnly = false)
 | --- | --- | --- | --- |
 | `label` | string | null | 按钮文字；null 或空字符串使用整理后的方法名。 |
 | `playModeOnly` | bool | false | true 时只允许在 Play Mode 点击，编辑模式仍显示但禁用。 |
+| `height` | float | 0f | 按钮高度，正值覆盖默认高度，例如 `[Button("刷新", height: 28f)]`。 |
 
 | 调用方式 | 效果 |
 | --- | --- |
