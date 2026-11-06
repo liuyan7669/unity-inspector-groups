@@ -43,7 +43,18 @@ namespace Cowart.InspectorGroups.Editor
             Rect foldout = title;
             foldout.y += (title.height - EditorGUIUtility.singleLineHeight) * 0.5f - 1f;
             foldout.height = EditorGUIUtility.singleLineHeight;
-            Expanded = EditorGUI.Foldout(foldout, previous, group.Title, true);
+            if (group.Border && Event.current.type == EventType.Repaint)
+                EditorGUI.DrawRect(new Rect(rect.xMin, title.y, rect.width, 1f), pro ? Color.black : Color.gray);
+            GUIStyle style = EditorStyles.foldout;
+            if (group.Color is Color color)
+            {
+                style = new GUIStyle(style);
+                style.normal.textColor = style.onNormal.textColor = color;
+                style.focused.textColor = style.onFocused.textColor = color;
+                style.hover.textColor = style.onHover.textColor = color;
+                style.active.textColor = style.onActive.textColor = color;
+            }
+            Expanded = EditorGUI.Foldout(foldout, previous, group.Title, true, style);
             if (Expanded != previous) SessionState.SetBool(key, Expanded);
         }
 
@@ -53,6 +64,8 @@ namespace Cowart.InspectorGroups.Editor
         public void Dispose()
         {
             if (inGroup) EditorGUILayout.EndVertical();
+            inGroup = false;
+            Expanded = true;
         }
     }
 }

@@ -59,6 +59,8 @@ namespace Cowart.InspectorGroups.Editor
                     {
                         InspectorPropertyContext context = InspectorPropertyContext.Resolve(iterator);
                         FoldoutGroupAttribute group = context.IsElement ? null : context.Field?.GetCustomAttribute<FoldoutGroupAttribute>();
+                        if (!context.IsElement && context.Field?.IsDefined(typeof(EndFoldoutAttribute), true) == true)
+                            groups.Dispose();
                         if (group != null)
                             groups.Begin(group, GroupKey(inspector, iterator.propertyPath), fullWidth);
                         if (groups.Expanded)
@@ -88,7 +90,7 @@ namespace Cowart.InspectorGroups.Editor
                 bool visible = false;
                 foreach (object owner in owners)
                 {
-                    bool matches = owner != null && InspectorMemberUtility.Condition(owner, show.MemberName, show.Expected);
+                    bool matches = owner != null && InspectorMemberUtility.Condition(owner, show);
                     visible |= matches;
                     enabled &= matches;
                 }
@@ -116,6 +118,7 @@ namespace Cowart.InspectorGroups.Editor
             }
 
             using (new EditorGUI.DisabledScope(!enabled))
+            using (new FieldColorScope(field?.GetCustomAttribute<ColorFieldAttribute>()))
             {
                 ShowAsStringAttribute text = field?.GetCustomAttribute<ShowAsStringAttribute>();
                 DropdownAttribute dropdown = field?.GetCustomAttribute<DropdownAttribute>();
@@ -125,7 +128,7 @@ namespace Cowart.InspectorGroups.Editor
                 bool array = property.isArray && property.propertyType != SerializedPropertyType.String;
                 bool native = !array && (HasNativeRenderer(field) || (!presentation && !container));
                 if (native)
-                    EditorGUILayout.PropertyField(property, true);
+                    EditorGUILayout.PropertyField(property, Label(property, field), true);
                 else if (!context.IsElement) DrawDecorators(field);
 
                 if (!array)
@@ -154,10 +157,15 @@ namespace Cowart.InspectorGroups.Editor
                     DrawPreview(property, field.GetCustomAttribute<AssetPreviewAttribute>(), inspector);
                 if (!array && field != null && field.IsDefined(typeof(InlineEditorAttribute), true))
                     DrawInline(property, inspector);
+
+                if (!context.IsElement && field != null)
+                    foreach (LineAttribute line in field.GetCustomAttributes<LineAttribute>())
+                        if (line.Position != LinePosition.Above)
+                            LineDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, line.Thickness + 8f)), line);
             }
         }
 
-        private static Type ElementType(Type type)
+        internal static Type ElementType(Type type)
         {
             return type.IsArray ? type.GetElementType() : type.IsGenericType ? type.GetGenericArguments()[0] : type;
         }
@@ -166,14 +174,16 @@ namespace Cowart.InspectorGroups.Editor
         {
             if (field == null) return false;
             foreach (PropertyAttribute attribute in field.GetCustomAttributes<PropertyAttribute>())
-                if (!(attribute is HeaderAttribute) && !(attribute is SpaceAttribute) && !(attribute is TooltipAttribute))
+                if (!(attribute is HeaderAttribute) && !(attribute is SpaceAttribute) && !(attribute is TooltipAttribute) &&
+                    !(attribute is TitleAttribute) && !(attribute is LineAttribute) && !(attribute is InfoBoxAttribute))
                     return true;
             return false;
         }
 
         private static GUIContent Label(SerializedProperty property, FieldInfo field)
         {
-            return new GUIContent(property.displayName, field?.GetCustomAttribute<TooltipAttribute>()?.tooltip);
+            return new GUIContent(field?.GetCustomAttribute<LabelAttribute>()?.Text ?? property.displayName,
+                field?.GetCustomAttribute<TooltipAttribute>()?.tooltip);
         }
 
         private static void DrawDecorators(FieldInfo field)
@@ -184,11 +194,43 @@ namespace Cowart.InspectorGroups.Editor
             foreach (PropertyAttribute attribute in attributes)
             {
                 if (attribute is SpaceAttribute space) EditorGUILayout.Space(space.height);
+                else if (attribute is TitleAttribute title)
+                    TitleDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, TitleDecoratorDrawer.Height)), title);
+                else if (attribute is InfoBoxAttribute info)
+                    InfoBoxDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, InfoBoxDecoratorDrawer.Height(info))), info);
+                else if (attribute is LineAttribute line && line.Position != LinePosition.Below)
+                    LineDecoratorDrawer.Draw(EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, line.Thickness + 8f)), line);
                 else if (attribute is HeaderAttribute header)
                 {
                     EditorGUILayout.Space(8f);
                     EditorGUILayout.LabelField(header.header, EditorStyles.boldLabel);
                 }
+            }
+        }
+
+        private readonly struct FieldColorScope : IDisposable
+        {
+            private readonly Color background;
+            private readonly Color content;
+            private readonly Color label;
+
+            internal FieldColorScope(ColorFieldAttribute attribute)
+            {
+                background = GUI.backgroundColor;
+                content = GUI.contentColor;
+                label = EditorStyles.label.normal.textColor;
+                if (attribute == null) return;
+                GUI.backgroundColor = attribute.Color;
+                if (!attribute.TintText) return;
+                GUI.contentColor = attribute.Color;
+                EditorStyles.label.normal.textColor = attribute.Color;
+            }
+
+            public void Dispose()
+            {
+                GUI.backgroundColor = background;
+                GUI.contentColor = content;
+                EditorStyles.label.normal.textColor = label;
             }
         }
 
@@ -360,11 +402,39 @@ namespace Cowart.InspectorGroups.Editor
             }
             float value = valueType == typeof(int) ? property.intValue : property.floatValue;
             Rect rect = EditorGUILayout.GetControlRect(false, attribute.Height);
+            EditorGUI.BeginProperty(rect, Label(property, field), property);
             rect = EditorGUI.PrefixLabel(rect, Label(property, field));
             bool finite = !float.IsNaN(value) && !float.IsInfinity(value);
             float progress = finite ? Mathf.InverseLerp(attribute.Min, attribute.Max, value) : 0f;
-            EditorGUI.ProgressBar(rect, property.hasMultipleDifferentValues ? 0f : progress,
-                property.hasMultipleDifferentValues ? "—（多个值）" : $"{value:0.##} / {attribute.Max:0.##}");
+            bool mixed = property.hasMultipleDifferentValues;
+            string text = mixed ? "—（多个值）" : $"{value:0.##} / {attribute.Max:0.##}";
+            if (attribute.FillColor is Color color)
+            {
+                EditorGUI.DrawRect(rect, new Color(0.15f, 0.15f, 0.15f));
+                if (!mixed)
+                    EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width * progress, rect.height), color);
+                GUI.Label(rect, text, EditorStyles.centeredGreyMiniLabel);
+                Event current = Event.current;
+                int id = GUIUtility.GetControlID(FocusType.Passive, rect);
+                if (current.GetTypeForControl(id) == EventType.MouseUp && GUIUtility.hotControl == id)
+                {
+                    GUIUtility.hotControl = 0;
+                    current.Use();
+                }
+                else if (GUI.enabled && rect.width > 0f &&
+                    (current.GetTypeForControl(id) == EventType.MouseDown && current.button == 0 && rect.Contains(current.mousePosition) ||
+                     current.GetTypeForControl(id) == EventType.MouseDrag && GUIUtility.hotControl == id))
+                {
+                    GUIUtility.hotControl = id;
+                    float next = Mathf.Lerp(attribute.Min, attribute.Max, (current.mousePosition.x - rect.x) / rect.width);
+                    if (valueType == typeof(int)) property.intValue = Mathf.RoundToInt(next);
+                    else property.floatValue = next;
+                    GUI.changed = true;
+                    current.Use();
+                }
+            }
+            else EditorGUI.ProgressBar(rect, mixed ? 0f : progress, text);
+            EditorGUI.EndProperty();
         }
 
         private static void DrawPreview(SerializedProperty property, AssetPreviewAttribute attribute, UnityEditor.Editor inspector)
@@ -463,7 +533,9 @@ namespace Cowart.InspectorGroups.Editor
                         var content = new GUIContent(string.IsNullOrEmpty(button.Label)
                             ? ObjectNames.NicifyVariableName(method.Name) : button.Label);
                         // GUILayout.Button 不响应缩进，按当前层级缩进后与同组字段对齐。
-                        Rect rect = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(content, GUI.skin.button, GUILayout.ExpandWidth(true)));
+                        Rect rect = EditorGUI.IndentedRect(button.Height > 0f
+                            ? GUILayoutUtility.GetRect(content, GUI.skin.button, GUILayout.ExpandWidth(true), GUILayout.Height(button.Height))
+                            : GUILayoutUtility.GetRect(content, GUI.skin.button, GUILayout.ExpandWidth(true)));
                         if (!GUI.Button(rect, content)) continue;
                         InvokeButton(inspector, method, path);
                         inspector.Repaint();

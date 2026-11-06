@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0] - 2026-11-06
+
+### Added
+
+- 添加 Title、Line、InfoBox、Label 和 ColorField，支持字段装饰、自定义标签和着色。
+- 添加 MinMaxSlider、Tag、Layer、SceneName 和 EnumFlags 字段控件。
+- ShowIf 支持多个候选值和引用条件，并添加 HideIf。
+- FoldoutGroup 支持标题颜色和边线，EndFoldout 可结束当前分组。
+- 添加可拖动的彩色 ProgressBar 重载，以及 Button 高度设置。
+
+### Changed
+
+- 新旧特性共用包内 Inspector，重复的资源预览和下拉能力分别统一到 AssetPreview 和 Dropdown。
+- 扩充 Tests 示例，覆盖新增控件、不同参数和组合用法。
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

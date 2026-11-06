@@ -11,18 +11,35 @@ namespace Cowart.InspectorGroups
 
     /// <summary>根据所属对象的布尔字段、属性或无参方法决定是否显示成员。</summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
-    public sealed class ShowIfAttribute : Attribute
+    public class ShowIfAttribute : Attribute
     {
         /// <summary>条件成员名。</summary>
         public string MemberName { get; }
         /// <summary>条件成员需要满足的值。</summary>
         public bool Expected { get; }
+
+        /// <summary>任一值匹配即满足条件。空集合表示按布尔值或对象引用判断。</summary>
+        public object[] Values { get; }
         /// <summary>指定条件成员及期望值。</summary>
-        public ShowIfAttribute(string memberName, bool expected = true)
+        public ShowIfAttribute(string memberName, bool expected)
         {
             MemberName = memberName;
             Expected = expected;
         }
+
+        /// <summary>指定条件成员及允许的值。</summary>
+        public ShowIfAttribute(string memberName, params object[] values)
+        {
+            MemberName = memberName;
+            Expected = true;
+            Values = values ?? new object[] { null };
+        }
+    }
+
+    /// <summary>条件成立时隐藏字段、属性或按钮。</summary>
+    public sealed class HideIfAttribute : ShowIfAttribute
+    {
+        public HideIfAttribute(string memberName, params object[] values) : base(memberName, values) { }
     }
 
     /// <summary>根据所属对象的布尔字段、属性或无参方法决定是否允许成员交互。</summary>
@@ -64,11 +81,14 @@ namespace Cowart.InspectorGroups
         public bool PlayModeOnly { get; }
         /// <summary>特性所在源码行号，由编译器自动填写，用于按声明顺序绘制。</summary>
         public int Line { get; }
+        /// <summary>自定义按钮高度，0 表示使用默认高度。</summary>
+        public float Height { get; }
         /// <summary>指定按钮文字和运行时限制；line 由编译器自动填写，无需手动传入。</summary>
-        public ButtonAttribute(string label = null, bool playModeOnly = false, [CallerLineNumber] int line = 0)
+        public ButtonAttribute(string label = null, bool playModeOnly = false, [CallerLineNumber] int line = 0, float height = 0f)
         {
             Label = label;
             PlayModeOnly = playModeOnly;
+            Height = height;
             Line = line;
         }
     }
@@ -115,12 +135,20 @@ namespace Cowart.InspectorGroups
         public float Max { get; }
         /// <summary>进度条高度。</summary>
         public float Height { get; }
+        /// <summary>可拖动进度条的填充色。空值表示只读。</summary>
+        public UnityEngine.Color? FillColor { get; }
         /// <summary>指定进度范围及显示高度。</summary>
         public ProgressBarAttribute(float min = 0f, float max = 1f, float height = 18f)
         {
             Min = min;
             Max = max;
             Height = Math.Max(16f, height);
+        }
+
+        /// <summary>创建从零开始、可拖动修改的彩色进度条。</summary>
+        public ProgressBarAttribute(float max, string color) : this(0f, max)
+        {
+            FillColor = ColorParser.Parse(color, UnityEngine.Color.green);
         }
     }
 

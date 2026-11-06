@@ -98,6 +98,126 @@ public class Tests : MonoBehaviour
     [ReadOnly, Tooltip("父级 ReadOnly 会同时禁用内部字段和按钮。")]
     [SerializeField] private NestedSample readOnlyNestedSample = new NestedSample();
 
+    [FoldoutGroup("12 · 字段外观与选择器", spacing: 8f, color: "#4FC3F7", border: true)]
+    [Title("字段外观")]
+    [InfoBox("拖动彩色进度条或双端滑块，修改下方数值。")]
+    [Label("生命值"), ProgressBar(100f, "#E53935")]
+    [SerializeField] private float health = 80f;
+
+    [ColorField("#FFD54F", true), Line(LinePosition.Both)]
+    [SerializeField] private string characterName = "Hero";
+
+    [MinMaxSlider(0f, 100f)]
+    [SerializeField] private Vector2 damageRange = new Vector2(10f, 30f);
+
+    [ReadOnly, Label("唯一 ID")]
+    [SerializeField] private int characterId = 1001;
+
+    [ColorField(1f, 0.5f, 0.5f)]
+    [SerializeField] private float importantValue = 1f;
+
+    [ProgressBar(50f, "#42A5F5")]
+    [SerializeField] private int mana = 30;
+
+    [Title("项目选择器", "#AB47BC")]
+    [Tag]
+    [SerializeField] private string targetTag = "Untagged";
+
+    [Layer]
+    [SerializeField] private int targetLayer;
+
+    [SceneName]
+    [SerializeField] private string nextScene;
+
+    private readonly string[] difficulties = { "Easy", "Normal", "Hard" };
+    private readonly float[] speedOptions = { 0.5f, 1f, 2f, 4f };
+
+    [Dropdown(nameof(difficulties))]
+    [SerializeField] private string difficulty = "Normal";
+
+    [Dropdown(nameof(speedOptions))]
+    [SerializeField] private float speed = 1f;
+
+    [Flags]
+    private enum Element { None = 0, Fire = 1, Water = 2, Wind = 4, Earth = 8 }
+
+    [EnumFlags]
+    [SerializeField] private Element elements = Element.Fire | Element.Wind;
+
+    private enum AttackType { Melee, Ranged, Magic }
+
+    [SerializeField] private AttackType attackType;
+
+    [ShowIf(nameof(attackType), AttackType.Ranged, AttackType.Magic)]
+    [SerializeField] private float attackRange = 10f;
+
+    [ShowIf(nameof(attackType), AttackType.Magic)]
+    [SerializeField] private int manaCost = 5;
+
+    [HideIf(nameof(attackType), AttackType.Melee)]
+    [SerializeField] private float projectileSpeed = 5f;
+
+    [Title("分割线位置", "#26A69A")]
+    [Line]
+    [SerializeField] private int lineAbove = 1;
+
+    [Line("#FF7043", 2f, LinePosition.Below)]
+    [SerializeField] private int lineBelow = 2;
+
+    [Line("#29B6F6", 2f, LinePosition.Both)]
+    [SerializeField] private int lineBoth = 3;
+
+    [FoldoutGroup("12a · 移动与音效", color: "#4FC3F7")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpHeight = 2f;
+    [SerializeField] private bool canDoubleJump;
+
+    [ShowIf(nameof(canDoubleJump))]
+    [SerializeField] private float doubleJumpHeight = 1f;
+
+    [SerializeField] private AudioClip hitSound;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float volume = 1f;
+
+    [FoldoutGroup("12b · 战斗与外观", expanded: false, color: "#EF5350")]
+    [SerializeField] private int attack = 10;
+
+    [ProgressBar(100f, "#FFA726")]
+    [SerializeField] private int defense = 40;
+
+    [ReadOnly]
+    [SerializeField] private float critRate = 0.15f;
+
+    [SerializeField] private bool hasShield;
+
+    [ShowIf(nameof(hasShield))]
+    [SerializeField] private float shieldValue = 50f;
+
+    [HideIf(nameof(hasShield)), InfoBox("没有护盾时显示。", InfoBoxType.Warning)]
+    [SerializeField] private float dodgeRate = 0.1f;
+
+    [Required, AssetPreview(64f)]
+    [SerializeField] private GameObject weaponPrefab;
+
+    [FoldoutGroup("12c · 资源预览与调试", color: "#42A5F5")]
+    [AssetPreview(64f)]
+    [SerializeField] private Sprite icon;
+
+    [AssetPreview(48f)]
+    [SerializeField] private Sprite avatar;
+
+    [SerializeField] private Color tint = Color.white;
+
+    [SerializeField] private bool debugMode;
+
+    [ShowIf(nameof(debugMode))]
+    [SerializeField] private float tickRate = 0.02f;
+
+    [EndFoldout]
+    [InfoBox("此字段位于折叠分组之外。")]
+    [SerializeField] private string ungroupedNote = "收起上方分组后，这一项仍可见。";
+
     [FoldoutGroup("ShowAsString · 未序列化数据", spacing: 8f)]
     [ShowAsString("字典示例")]
     private readonly Dictionary<string, int> sampleDictionary = new Dictionary<string, int>
@@ -179,7 +299,7 @@ public class Tests : MonoBehaviour
     }
 
     [FoldoutGroup("11 · Button 操作按钮", spacing: 8f)]
-    [Button("进度 +10，并更新只读计数")]
+    [Button("进度 +10，并更新只读计数", height: 28f)]
     private void AdvanceProgress()
     {
         progress = progress >= 100f ? 0f : Mathf.Min(100f, progress + 10f);
@@ -205,6 +325,19 @@ public class Tests : MonoBehaviour
     private void VisibleButton()
     {
         buttonClickCount++;
+    }
+
+    [Button("回满生命和法力", height: 28f)]
+    private void Heal()
+    {
+        health = 100f;
+        mana = 50;
+    }
+
+    [Button("打印角色状态"), ShowIf(nameof(debugMode))]
+    private void PrintCharacterState()
+    {
+        Debug.Log($"{characterName} HP={health} MP={mana}");
     }
 
     [Button("仅 Play Mode 可点击", playModeOnly: true)]

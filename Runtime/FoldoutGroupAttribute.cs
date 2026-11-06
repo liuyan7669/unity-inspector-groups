@@ -15,12 +15,20 @@ namespace Cowart.InspectorGroups
         /// <summary>当前分组结束后到下一个分组的垂直间距，单位为 Inspector GUI 点。</summary>
         public float Spacing { get; }
 
+        /// <summary>标题文字颜色。</summary>
+        public UnityEngine.Color? Color { get; }
+
+        /// <summary>是否绘制标题栏边线。</summary>
+        public bool Border { get; }
+
         /// <summary>创建分组，可指定初始展开状态和到下一个分组的间距。</summary>
-        public FoldoutGroupAttribute(string title, bool expanded = true, float spacing = 2f)
+        public FoldoutGroupAttribute(string title, bool expanded = true, float spacing = 2f, string color = null, bool border = false)
         {
             Title = title;
             Expanded = expanded;
             Spacing = Math.Max(0f, spacing);
+            if (!string.IsNullOrEmpty(color)) Color = ColorParser.Parse(color, UnityEngine.Color.white);
+            Border = border;
         }
     }
 }

@@ -1,6 +1,6 @@
 # Inspector Groups
 
-适用于 Unity Inspector 的 11 个自定义特性：折叠分组、只读、条件显示、条件启用、必填提示、方法按钮、内联编辑、资源预览、下拉选项、进度条和文本展示。
+为 Unity Inspector 提供折叠分组、条件显示、字段选择器、资源预览、方法按钮及其他自定义特性。
 
 支持在同一成员上组合不同特性，也支持在可序列化的类、结构体、数组、列表及内联 ScriptableObject 中继续使用特性。可以混用 Unity 的 Header、Space、Tooltip、Range、Min、TextArea 等特性。
 
@@ -8,7 +8,7 @@
 
 - Package Manager 显示名：`Inspector Groups`
 - 包名：`com.cowart.inspector-groups`
-- 当前版本：`1.0.0`
+- 当前版本：`1.1.0`
 - Runtime 程序集与命名空间：`Cowart.InspectorGroups`
 - Editor 程序集与命名空间：`Cowart.InspectorGroups.Editor`
 - 许可：MIT
@@ -33,7 +33,7 @@
 在 Package Manager 中选择 **+ > Add package from git URL...**，输入固定版本地址：
 
 ```text
-https://github.com/liuyan7669/unity-inspector-groups.git#1.0.0
+https://github.com/liuyan7669/unity-inspector-groups.git#1.1.0
 ```
 
 开发期间可使用 `https://github.com/liuyan7669/unity-inspector-groups.git#main`。
@@ -42,7 +42,7 @@ https://github.com/liuyan7669/unity-inspector-groups.git#1.0.0
 
 ### 通过 OpenUPM 安装
 
-本包已在 OpenUPM 发布 `1.0.0`：[查看包页面](https://openupm.com/packages/com.cowart.inspector-groups/)。在 Unity 的 **Edit > Project Settings > Package Manager** 添加 Scoped Registry：
+在 OpenUPM 查看已发布版本：[查看包页面](https://openupm.com/packages/com.cowart.inspector-groups/)。在 Unity 的 **Edit > Project Settings > Package Manager** 添加 Scoped Registry：
 
 ```text
 Name: package.openupm.com
@@ -59,7 +59,8 @@ com.cowart.inspector-groups/
 ├── Runtime/
 │   ├── Cowart.InspectorGroups.asmdef
 │   ├── FoldoutGroupAttribute.cs
-│   └── InspectorAttributes.cs
+│   ├── InspectorAttributes.cs
+│   └── FieldAttributes.cs
 ├── Editor/
 │   ├── Cowart.InspectorGroups.Editor.asmdef
 │   └── Inspector 绘制与成员解析代码
@@ -80,7 +81,7 @@ com.cowart.inspector-groups/
 
 在 Package Manager 选中 **Inspector Groups**，从 Samples 导入 **Inspector Demo**。在场景创建空 GameObject 并添加 `Tests` 组件，即可检查全部特性、按钮、嵌套类、列表和内联 ScriptableObject。示例的临时配置与纹理只驻留内存。
 
-当前开发工程已保留一份导入的 demo，路径为 `Assets/Samples/Inspector Groups/1.0.0/Inspector Demo`；脚本 GUID 与原始 `Tests.cs` 一致，以保留现有场景引用。完整步骤见示例 README。
+当前开发工程可直接打开 `Assets/Tests/Scenes/SampleScene.unity`，查看场景中已有的 `Tests` 组件。开发工程里的示例脚本和包内示例内容同步，并保留各自原有的脚本 GUID。
 
 ## 接入
 
@@ -113,13 +114,24 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 - [完整组合示例](#完整组合示例)
 - [自定义编辑器接入](#自定义编辑器接入)
 
+## 新增特性与迁移
+
+- 装饰支持 `[Title("战斗")]`、`[InfoBox("提示")]` 和 `[Line(LinePosition.Both)]`。下方分割线由包内 Inspector 绘制。
+- 字段显示支持 `[Label("生命值")]` 和 `[ColorField("#FFD54F", true)]`。
+- 选择器支持 `[MinMaxSlider(0, 100)]`（Vector2 / Vector2Int）、`[Tag]`（string）、`[Layer]`（int / string）、`[SceneName]`（启用场景的名称或构建索引）和 `[EnumFlags]`（枚举）。
+- `ShowIf` 支持枚举等多个候选值，匹配任一值时显示。只给成员名时，布尔值按真假判断，引用按非空判断。`HideIf` 反转条件。
+- `[ProgressBar(100f, "#66BB6A")]` 允许点击和拖动修改。原有数值范围重载仍显示只读进度。
+- `[Button("刷新", height: 28)]` 可指定按钮高度。
+
+原 `InspectorAttributes` 示例的新增效果已并入 `Tests` 的「12 · 字段外观与选择器」分组。使用旧示例的写法时，将命名空间改为 `Cowart.InspectorGroups`，用 `AssetPreview` 替换 `Preview`。用 `FoldoutGroup` 开始连续分组，通过 `EndFoldout` 在当前字段前结束分组。原先依赖同名标记收集离散字段的写法，需要把字段放在同一连续区间，并在首字段标记一次。分组可通过 `color` 和 `border` 设置标题颜色和边线。
+
 ## 组合与嵌套规则
 
 | 规则 | 实际行为 |
 | --- | --- |
 | 特性顺序 | 自定义特性的书写顺序不决定谁覆盖谁。显示条件、禁用状态、字段控件、附加展示分别处理。 |
 | 同一字段叠加 | 例如 `ReadOnly + ShowIf + Dropdown + ProgressBar + ShowAsString`：先判断是否显示，再限制编辑，同时绘制下拉、进度与文本。 |
-| 多种展示叠加 | Dropdown、ProgressBar、ShowAsString 同时标记时，依次显示各自视图，不再只选择一种。ProgressBar、ShowAsString 本身只读，但不把其他编辑控件强制置灰。 |
+| 多种展示叠加 | Dropdown、ProgressBar、ShowAsString 同时标记时，依次显示各自视图，不再只选择一种。默认 ProgressBar 和 ShowAsString 只读，但不把其他编辑控件强制置灰。 |
 | Unity 装饰特性 | Header、Space 保留标题和间距；Tooltip 保留悬停提示。HideInInspector 隐藏字段，不被这些自定义特性强制显示。 |
 | Unity 字段控件 | 与 Range、Min、TextArea、Multiline 等组合时，保留原生字段控件，再添加自定义展示。Dropdown 的数值选项会过滤掉不满足 Range、Min 的项。 |
 | 嵌套对象 | 子对象展开后，内部字段继续识别特性。子对象的条件、下拉来源，相对于子对象自身解析，不相对于根组件。 |
@@ -128,7 +140,7 @@ Runtime 只包含特性声明，不引用 UnityEditor；绘制、反射解析和
 | 内联对象 | InlineEditor 中继续使用相同的绘制规则，内部的分组、条件、按钮及其他特性仍生效。循环对象引用停止继续展开，并显示提示。 |
 | 方法和非序列化成员 | Button 方法、未序列化的 ShowAsString 字段/属性显示在当前对象的序列化字段之后，可独立分组，也可组合 ReadOnly、ShowIf、EnableIf。 |
 | 类型要求 | 组合不会改变类型契约。例如 ProgressBar 用于 int/float，InlineEditor 用于 ScriptableObject，不能把对象引用当成数值进度。类型或成员名错误会显示提示。 |
-| 同种特性重复 | 同一声明不允许重复标记同种特性；不同对象层级可以各自声明。 |
+| 同种特性重复 | Title、Line 和 InfoBox 允许在同一字段重复标记；不同对象层级可以各自声明。 |
 
 以下写法等价：
 
@@ -221,8 +233,8 @@ ShowIfAttribute(string memberName, bool expected = true)
 
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `memberName` | string | 必填 | 返回 bool 的条件成员名，推荐使用 nameof。 |
-| `expected` | bool | true | 条件成员的值等于此值时显示。 |
+| `memberName` | string | 必填 | 提供条件值的字段、属性或无参方法名，推荐使用 nameof。 |
+| `expected` | bool | 省略时自动判断 | 显式传入时按布尔值匹配。也可传入多个候选值，匹配任一值时显示。 |
 
 | 调用方式 | 效果 |
 | --- | --- |
@@ -244,7 +256,7 @@ ShowIfAttribute(string memberName, bool expected = true)
 
 **功能：**条件满足时允许交互，否则保持可见并置灰。嵌套对象和内联内容继承此禁用状态。
 
-**适用位置：**字段、ShowAsString 属性、Button 方法。条件来源与 ShowIf 相同。
+**适用位置：**字段、ShowAsString 属性、Button 方法。条件来源须返回布尔值。
 
 ```csharp
 EnableIfAttribute(string memberName, bool expected = true)
@@ -429,7 +441,7 @@ private string[] GetModuleOptions()
 
 ## ProgressBar
 
-**功能：**把 int 或 float 数值显示为只读进度条，不修改真实数值；超出范围只影响条的填充比例。
+**功能：**将 int 或 float 显示为进度条。数值范围重载为只读，颜色重载支持点击和拖动编辑。
 
 **适用位置：**int、float 字段及其数组/列表。与 Dropdown 或原生 Range 控件组合时，编辑控件仍可修改数值，进度条展示修改后的状态。
 
@@ -445,6 +457,7 @@ ProgressBarAttribute(float min = 0f, float max = 1f, float height = 18f)
 
 | 调用方式 | 效果 |
 | --- | --- |
+| `[ProgressBar(100f, "#66BB6A")]` | 范围 0～100，可点击和拖动。 |
 | `[ProgressBar]` / `[ProgressBar()]` | 范围 0～1，高度 18。 |
 | `[ProgressBar(-1f)]` | 仅指定 min，范围 -1～1，高度 18。 |
 | `[ProgressBar(0f, 100f)]` | 范围 0～100，高度 18。 |
@@ -605,7 +618,8 @@ public class InspectorAttributesExampleEditor : FoldoutGroupEditor
 InspectorGroups/
 ├── Runtime/
 │   ├── FoldoutGroupAttribute.cs
-│   └── InspectorAttributes.cs
+│   ├── InspectorAttributes.cs
+│   └── FieldAttributes.cs
 ├── Editor/
 │   ├── FoldoutGroupEditor.cs
 │   ├── InspectorAttributeGUI.cs

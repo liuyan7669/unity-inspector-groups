@@ -64,6 +64,17 @@ namespace Cowart.InspectorGroups.Editor
             return result == expected;
         }
 
+        internal static bool Condition(object owner, ShowIfAttribute attribute)
+        {
+            if (attribute.Values == null) return Condition(owner, attribute.MemberName, attribute.Expected);
+
+            object value = Read(owner, attribute.MemberName);
+            bool matches = attribute.Values.Length == 0
+                ? (value is bool boolean ? boolean : value is UnityEngine.Object reference ? reference != null : value != null)
+                : Array.Exists(attribute.Values, expected => Equals(value, expected));
+            return attribute is HideIfAttribute ? !matches : matches;
+        }
+
         internal static List<object> Options(object owner, string memberName, Type valueType)
         {
             object value = Read(owner, memberName);
