@@ -33,7 +33,7 @@
 在 Package Manager 中选择 **+ > Add package from git URL...**，输入固定版本地址：
 
 ```text
-https://github.com/liuyan7669/unity-inspector-groups.git#1.2.0
+https://github.com/liuyan7669/unity-inspector-groups.git#1.2.1
 ```
 
 开发期间可使用 `https://github.com/liuyan7669/unity-inspector-groups.git#main`。

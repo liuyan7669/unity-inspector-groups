@@ -1,6 +1,6 @@
 {
   "name": "com.cowart.inspector-groups",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "displayName": "Inspector Groups",
   "description": "为 Unity Inspector 提供折叠分组、字段装饰、居中文字分隔线与选择器、条件显示、可拖动进度条、方法按钮、内联编辑和资源预览。",
   "unity": "2021.3",
